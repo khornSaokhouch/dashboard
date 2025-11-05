@@ -103,22 +103,33 @@ export const useShopStore = create((set, get) => ({
   // -------------------------------
   deleteShop: async (id) => {
     const token = useAuthStore.getState().token;
-    if (!token) throw new Error('No token found. Please log in.');
-
+    if (!token) {
+      set({ error: 'No token found. Please log in.' });
+      throw new Error('No token found. Please log in.');
+    }
+  
     set({ loading: true, error: null });
     try {
-      await request(`/admin/shops/${id}`, 'DELETE', null, {
+      const res = await request(`/admin/shops/${id}`, 'DELETE', null, {
         headers: { Authorization: `Bearer ${token}` },
       });
+  
       set((state) => ({
         shops: state.shops.filter((s) => s.id !== id),
         loading: false,
       }));
+  
+      return res;
     } catch (err) {
-      set({ error: err.response?.data?.message || err.message || 'Failed to delete shop', loading: false });
-      throw err;
+      if (err.response?.status === 403) {
+        alert('You are not allowed to delete this shop.');
+      } else {
+        alert(err.message || 'Failed to delete shop.');
+      }
     }
+    
   },
+  
 
   // -------------------------------
   // Fetch nearby shops

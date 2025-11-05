@@ -14,23 +14,26 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState('');
 
-const handleLogin = async (e) => {
-  e.preventDefault();
-  setError('');
-
-  try {
-    const { user } = await login(email, password); // <-- destructure here
-    if (user.role === 'admin') {
-      router.push('/dashboard');
-    } else {
-      setError('You do not have permission to access the admin dashboard.');
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+  
+    try {
+      const { user } = await login(email, password); // destructure user
+  
+      // Route based on role
+      if (user.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else if (user.role === 'owner') {
+        router.push('/owner/dashboard');
+      } else {
+        setError('You do not have permission to access the dashboard.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Login failed');
     }
-  } catch (err) {
-    setError(err.response?.data?.message || err.message || 'Login failed');
-  }
-};
-
-
+  };
+  
   return (
     <div
       className="min-h-screen flex items-center justify-center relative"
@@ -133,13 +136,6 @@ const handleLogin = async (e) => {
             {loading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
-
-        <p className="mt-8 text-base text-gray-700">
-          Don't have an account?{' '}
-          <a href="/auth/signup" className="text-amber-600 hover:underline font-medium">
-            Sign up
-          </a>
-        </p>
       </div>
     </div>
   );

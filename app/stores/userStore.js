@@ -72,25 +72,32 @@ export const useUserStore = create((set, get) => ({
   // -------------------------------
   updateUser: async (updatedData) => {
     const token = useAuthStore.getState().token;
-    const currentUser = get().user;
-    if (!currentUser) throw new Error('No logged-in user');
     if (!token) throw new Error('No token found. Please log in.');
-
+  
+    set({ loading: true, error: null });
     try {
-      const data = await request(`/users/${currentUser.id}`, 'POST', updatedData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      const res = await request(`/admin/users/${updatedData.id}`, 'PUT', updatedData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
-
-      set({ user: data });
+  
+      // Update users in store
       set((state) => ({
-        users: state.users.map((u) => (u.id === currentUser.id ? { ...data, id: data.id ?? data.user_id } : u)),
+        users: state.users.map((u) =>
+          u.id === updatedData.id ? { ...u, ...res.data } : u
+        ),
+        loading: false,
       }));
-      return data;
+  
+      return res.data;
     } catch (err) {
-      throw new Error(err.response?.data?.message || err.message || 'Update failed');
+      set({
+        error: err.response?.data?.message || err.message || 'Update failed',
+        loading: false,
+      });
+      throw err;
     }
   },
-
+  
   // -------------------------------
   // Delete a user
   // -------------------------------
