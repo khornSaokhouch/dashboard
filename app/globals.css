@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+/* Khmer OS font */
+@font-face {
+  font-family: 'Khmer OS';
+  src: url('/fonts/Siemreap-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* CSS Variables */
+:root {
+  --font-latin: 'Inter', sans-serif;
+  --font-khmer: 'Khmer OS', sans-serif;
+}
+
+/* Default font */
+body {
+  font-family: var(--font-latin);
+}
+
+/* Khmer font class */
+.khmer-text {
+  font-family: var(--font-khmer);
+  font-weight: 400;
+}

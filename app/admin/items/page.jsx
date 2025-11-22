@@ -3,18 +3,26 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useItemStore } from '@/app/stores/useItemStore';
-import { TrashIcon, PencilSquareIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import {
+  TrashIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  ArrowPathIcon,
+} from '@heroicons/react/24/outline';
 
 export default function ItemsTable() {
   const router = useRouter();
   const { items, fetchItems, deleteItem, loading, error } = useItemStore();
+
   const [showDelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
+  // ✅ Fetch items on mount
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
+  // ✅ Handle delete modal logic
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setShowDelete(true);
@@ -32,19 +40,24 @@ export default function ItemsTable() {
 
   return (
     <div className="p-8">
+      {/* Header and actions */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Items Management</h1>
+
         <div className="flex gap-2">
           <button
             onClick={fetchItems}
-            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md transition"
             disabled={loading}
+            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md transition disabled:opacity-60"
           >
-            <ArrowPathIcon className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+            <ArrowPathIcon
+              className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`}
+            />
             Refresh
           </button>
+
           <button
-            onClick={() => router.push('/admin//items/create')}
+            onClick={() => router.push('/admin/items/create')}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
           >
             <PlusIcon className="h-5 w-5" />
@@ -53,10 +66,14 @@ export default function ItemsTable() {
         </div>
       </div>
 
+      {/* States */}
       {loading && <p className="text-gray-500 text-center">Loading items...</p>}
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-      {!loading && items.length === 0 && <p className="text-gray-500 text-center">No items found.</p>}
+      {!loading && items.length === 0 && (
+        <p className="text-gray-500 text-center">No items found.</p>
+      )}
 
+      {/* Items Table */}
       {!loading && items.length > 0 && (
         <div className="overflow-x-auto bg-white shadow-md rounded-lg">
           <table className="min-w-full divide-y divide-gray-200">
@@ -76,24 +93,46 @@ export default function ItemsTable() {
                 <th className="px-4 py-2 text-right text-sm font-semibold text-gray-700">Actions</th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-100">
-              {items.map((item) => (
-                <tr key={item.id}>
+              {items.map((item, index) => (
+                <tr key={item.id ?? `item-${index}`}>
                   <td className="px-4 py-2 text-sm text-gray-700">{item.id}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.shop_id}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.category_id}</td>
                   <td className="px-4 py-2 text-sm text-gray-800">{item.name}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.description ?? '—'}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.price_cents ?? '—'}</td>
+
                   <td className="px-4 py-2 text-sm text-gray-600">
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} className="h-10 w-10 object-cover rounded" />
-                    ) : '—'}
+                      <img
+                        key={item.image_url}
+                        src={item.image_url}
+                        alt={item.name}
+                        className="h-10 w-10 object-cover rounded"
+                      />
+                    ) : (
+                      '—'
+                    )}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{item.is_available ? 'Yes' : 'No'}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{item.display_order ?? '—'}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{item.created_at ?? '—'}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{item.updated_at ?? '—'}</td>
+
+                  <td className="px-4 py-2 text-sm text-gray-600">
+                    {item.is_available ? 'Yes' : 'No'}
+                  </td>
+
+                  <td className="px-4 py-2 text-sm text-gray-600">
+                    {item.display_order ?? '—'}
+                  </td>
+
+                  <td className="px-4 py-2 text-sm text-gray-600">
+                    {item.created_at ?? '—'}
+                  </td>
+
+                  <td className="px-4 py-2 text-sm text-gray-600">
+                    {item.updated_at ?? '—'}
+                  </td>
+
                   <td className="px-4 py-2 text-right flex justify-end gap-2">
                     <button
                       onClick={() => router.push(`/admin/items/edit/${item.id}`)}
@@ -119,8 +158,13 @@ export default function ItemsTable() {
       {showDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-md shadow-md w-96">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Confirm Delete</h2>
-            <p className="text-gray-700 mb-6">Are you sure you want to delete this item?</p>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Confirm Delete
+            </h2>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete this item?
+            </p>
+
             <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowDelete(false)}
@@ -128,6 +172,7 @@ export default function ItemsTable() {
               >
                 Cancel
               </button>
+
               <button
                 onClick={confirmDelete}
                 className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white"

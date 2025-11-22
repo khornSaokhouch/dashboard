@@ -5,6 +5,9 @@ import NavbarAdmin from "../components/admin/NavbarAdmin";
 import SidebarAdmin from "../components/admin/SidebarAdmin";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../stores/authStore";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { useLanguageContext } from "../components/LanguageProviderClient";
+import FontWrapper from "../components/FontWrapper";
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -12,6 +15,8 @@ export default function AdminLayout({ children }) {
   const user = useAuthStore((state) => state.user);
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const loginWithToken = useAuthStore((state) => state.loginWithToken);
+
+  const { translations } = useLanguageContext();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,9 +31,9 @@ export default function AdminLayout({ children }) {
         }
       }
 
-      if (!token) {
-        router.replace("/auth/login");
-      }
+      if (!token) router.replace("/auth/login");
+
+      if (user && user.role !== "admin") router.replace("/");
 
       setLoading(false);
     };
@@ -38,26 +43,32 @@ export default function AdminLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500 text-lg">Loading...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+        <ArrowPathIcon className="h-10 w-10 text-blue-500 animate-spin" />
+        <p className="mt-4 text-xl font-semibold text-gray-600">
+          {translations.loadingAdminPanel || "Loading Admin Panel..."}
+        </p>
       </div>
     );
   }
 
-  return (
-    <div className="bg-gray-100 text-gray-900 font-sans antialiased h-screen overflow-hidden flex">
-      {/* Sidebar always shown */}
-      <aside className="w-64 bg-white shadow-md h-screen fixed left-0 top-0 bottom-0 z-50">
-        <SidebarAdmin />
-      </aside>
+  if (!user) return null;
 
-      {/* Main content */}
-      <div className="flex flex-col flex-1 h-screen overflow-hidden ml-64">
-        <div className="sticky top-0 z-40">
-          <NavbarAdmin />
+  return (
+    <FontWrapper>
+      <div className="text-gray-900 antialiased h-screen overflow-hidden flex">
+        <aside className="w-64 h-screen fixed left-0 top-0 bottom-0 z-50">
+          <SidebarAdmin />
+        </aside>
+
+        <div className="flex flex-col flex-1 h-screen overflow-hidden ml-64">
+          <header className="sticky top-0 z-40">
+            <NavbarAdmin />
+          </header>
+
+          <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
         </div>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
-    </div>
+    </FontWrapper>
   );
 }
