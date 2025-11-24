@@ -23,7 +23,7 @@ export const useShopStore = create((set, get) => ({
       const res = await request('/admin/shops', 'GET', null, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set({ shops: res, loading: false });
+      set({ shops: res.data, loading: false });
       return res;
     } catch (err) {
       set({
@@ -60,21 +60,72 @@ export const useShopStore = create((set, get) => ({
   // -------------------------------
   // Create a new shop
   // -------------------------------
-  createShop: async (shopData) => {
-    const token = useAuthStore.getState().token;
-    if (!token) throw new Error('No token found. Please log in.');
+// -------------------------------
+// Create a new shop (Zustand action using request wrapper)
+// -------------------------------
+createShop: async (shopData = {}) => {
+  const token = useAuthStore.getState().token;
+  if (!token) throw new Error('No token found. Please log in.');
 
-    try {
-      const res = await request('/admin/shops', 'POST', shopData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
-      });
-      set((state) => ({ shops: [...state.shops, res] }));
-      return res;
-    } catch (err) {
-      set({ error: err.response?.data?.message || err.message || 'Failed to create shop' });
-      throw err;
+  // build FormData if there is a File (image) or if caller wants FormData
+  const buildFormDataIfNeeded = (data) => {
+    // if caller already passed a FormData, use it
+    if (data instanceof FormData) return data;
+
+    // check if any value is a File/Blob and therefore needs FormData
+    const hasFile = Object.values(data).some(
+      (v) => v instanceof File || v instanceof Blob
+    );
+
+    if (!hasFile) {
+      // no files present — we can send plain object (request() will set application/json)
+      // but Laravel expects multipart for files; sending JSON is fine if no file
+      return data;
     }
-  },
+
+    const fd = new FormData();
+    Object.keys(data).forEach((key) => {
+      const val = data[key];
+      if (val === undefined || val === null) return;
+
+      if (val instanceof File || val instanceof Blob) {
+        fd.append(key, val);
+      } else {
+        fd.append(key, String(val));
+      }
+    });
+    return fd;
+  };
+
+  try {
+    const payloadToSend = buildFormDataIfNeeded(shopData);
+
+    // call your request helper — it will use the axios instance with interceptor
+    const res = await request('/admin/shops', 'POST', payloadToSend, {
+      // no need to set Content-Type — interceptor will handle FormData
+      // but keep Authorization/header handled by interceptor using useAuthStore
+    });
+
+    // Laravel usually returns { message, data: $shop } — prefer payload.data
+    const newShop = res?.data ?? res;
+
+    // append to store
+    set((state) => ({ shops: [...(state.shops || []), newShop], error: null }));
+
+    return newShop;
+  } catch (err) {
+    // try to extract message from axios/Laravel payload
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.errors && Object.values(err.response.data.errors).flat().join(', ') ||
+      err?.message ||
+      'Failed to create shop';
+    set({ error: message });
+    throw err;
+  }
+},
+
+
 
   // -------------------------------
   // Update a shop
@@ -82,21 +133,67 @@ export const useShopStore = create((set, get) => ({
   updateShop: async (id, updatedData) => {
     const token = useAuthStore.getState().token;
     if (!token) throw new Error('No token found. Please log in.');
-
+  
+    // Build FormData
+    const formData = new FormData();
+  
+    // Convert status to 0/1 if present
+    if ('status' in updatedData) {
+      const s = updatedData.status;
+      // Accept "active"/"inactive", boolean, number, or string "0"/"1"
+      const statusInt =
+        s === true || s === 'active' || s === '1' || s === 1 ? 1 : 0;
+      formData.append('status', String(statusInt));
+    }
+  
+    // Append other fields
+    const fields = ['name','location','latitude','longitude','open_time','close_time','owner_user_id'];
+    fields.forEach((key) => {
+      if (key in updatedData && updatedData[key] !== undefined && updatedData[key] !== null) {
+        formData.append(key, String(updatedData[key]));
+      }
+    });
+  
+    // Append image only if it's a File (user selected a file)
+    if (updatedData.image instanceof File) {
+      formData.append('image', updatedData.image);
+    }
+    // If you want to explicitly clear image on the server, append a flag like `remove_image = 1`
+    // if you support that in the backend.
+  
+    // Some servers (and older Laravel setups) can't accept multipart PUT bodies reliably.
+    // If your backend accepts PUT multipart directly, you can call with method 'PUT'.
+    // If not, use POST + _method=PUT (Laravel recognizes this).
+    // I will use POST + _method fallback to be robust:
+    formData.append('_method', 'PUT');
+  
     try {
-      const res = await request(`/admin/shops/${id}`, 'PUT', updatedData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      // Do not set 'Content-Type' here — let the browser set the multipart boundary.
+      const res = await request(`/admin/shops/${id}`, 'POST', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // DO NOT set 'Content-Type': 'multipart/form-data'
+        },
       });
+  
+      // Normalize response payload:
+      // If your request helper returns axios-like res (res.data), handle both shapes:
+      const payload = res?.data?.data ?? res?.data ?? res;
+  
       set((state) => ({
-        shops: state.shops.map((s) => (s.id === id ? res : s)),
-        shop: state.shop?.id === id ? res : state.shop,
+        shops: state.shops.map((s) => (s.id === id ? payload : s)),
+        shop: state.shop?.id === id ? payload : state.shop,
       }));
-      return res;
+  
+      return payload;
     } catch (err) {
-      set({ error: err.response?.data?.message || err.message || 'Failed to update shop' });
+      // try to read a message path common from axios / fetch wrappers
+      const message = err?.response?.data?.message || err?.message || 'Failed to update shop';
+      set({ error: message });
       throw err;
     }
   },
+  
 
   // -------------------------------
   // Delete a shop

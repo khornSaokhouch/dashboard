@@ -22,7 +22,7 @@ export const useCategoryStore = create((set, get) => ({
       const res = await request('/admin/categories', 'GET', null, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set({ categories: res, loading: false });
+      set({ categories: res.data, loading: false });
       return res;
     } catch (err) {
       set({
@@ -80,26 +80,57 @@ export const useCategoryStore = create((set, get) => ({
   updateCategory: async (id, updatedData) => {
     const token = useAuthStore.getState().token;
     if (!token) throw new Error('No token found. Please log in.');
-
+  
     set({ loading: true, error: null });
     try {
-      const res = await request(`/admin/categories/${id}`, 'PUT', updatedData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      // If updatedData is already a FormData (e.g. from the form), use it.
+      // Otherwise build one from an object.
+      let body;
+      if (updatedData instanceof FormData) {
+        body = updatedData;
+      } else {
+        body = new FormData();
+        // known possible fields - append only when present
+        const fields = ['name', 'status'];
+        fields.forEach((key) => {
+          if (key in updatedData && updatedData[key] !== undefined && updatedData[key] !== null && updatedData[key] !== '') {
+            body.append(key, String(updatedData[key]));
+          }
+        });
+  
+        // image: append only if it's a File
+        if (updatedData.image_category instanceof File) {
+          body.append('image_category', updatedData.image_category);
+        }
+      }
+  
+      // Use POST + _method=PUT to be robust with multipart uploads
+      body.append('_method', 'PUT');
+  
+      // IMPORTANT: Do not set Content-Type header — let the browser handle multipart boundary
+      const res = await request(`/admin/categories/${id}`, 'POST', body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        // If your request helper supports a `isFormData` flag you can use it to skip JSON handling
       });
+  
+      // Normalize payload; API returns { message, data }
+      const payload = res?.data?.data ?? res?.data ?? res;
+  
       set((state) => ({
-        categories: state.categories.map((cat) => (cat.id === id ? res : cat)),
+        categories: state.categories.map((cat) => (cat.id === id ? payload : cat)),
         loading: false,
       }));
-      return res;
+  
+      return payload;
     } catch (err) {
-      set({
-        error: err.response?.data?.message || err.message || 'Failed to update category',
-        loading: false,
-      });
+      const message = err?.response?.data?.message || err?.message || 'Failed to update category';
+      set({ error: message, loading: false });
       throw err;
     }
   },
-
+  
   // -------------------------------
   // Delete a category
   // -------------------------------

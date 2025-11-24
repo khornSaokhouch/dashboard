@@ -22,7 +22,8 @@ export const useItemStore = create((set, get) => ({
       const res = await request('/admin/items', 'GET', null, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set({ items: res, loading: false });
+     
+      set({ items: res.data, loading: false });
       return res;
     } catch (err) {
       set({

@@ -21,7 +21,7 @@ export default function CreateShopPage() {
     }
 
     try {
-      await createShop({ ...data, owner_user_id: user.id });
+      await createShop({ ...data });
       alert(t.addShop + ' ' + t.saveChanges); // translated success message
       router.push('/admin/shops');
     } catch (err) {
