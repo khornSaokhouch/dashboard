@@ -4,39 +4,39 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useItemStore } from '@/app/stores/useItemStore';
 import { useCategoryStore } from '@/app/stores/useCategoryStore';
-// import { useShopStore } from '@/app/stores/useShopStore';
 
 export default function CreateItemPage() {
   const router = useRouter();
   const { createItem, loading } = useItemStore();
   const { categories, fetchCategories } = useCategoryStore();
-  // const { shops, fetchShops, loading: shopsLoading } = useShopStore();
 
   const [form, setForm] = useState({
-   
     category_id: '',
     name: '',
     description: '',
     price_cents: '',
     image_file: null,
     is_available: true,
-  
   });
 
   useEffect(() => {
     fetchCategories();
-    // fetchShops();
   }, [fetchCategories]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+
     if (type === 'file') {
       setForm((prev) => ({ ...prev, [name]: files[0] }));
-    } else if (type === 'checkbox') {
-      setForm((prev) => ({ ...prev, [name]: checked }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+      return;
     }
+
+    if (type === 'checkbox') {
+      setForm((prev) => ({ ...prev, [name]: checked }));
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -49,9 +49,12 @@ export default function CreateItemPage() {
       formData.append('description', form.description);
       formData.append('price_cents', form.price_cents);
       formData.append('is_available', form.is_available ? '1' : '0');
-      if (form.image_file) formData.append('image_url', form.image_file);
 
-      await createItem(formData); // make sure createItem handles FormData
+      if (form.image_file) {
+        formData.append('image_url', form.image_file);
+      }
+
+      await createItem(formData);
       alert('Item created successfully!');
       router.push('/admin/items');
     } catch (err) {
@@ -59,32 +62,20 @@ export default function CreateItemPage() {
     }
   };
 
+   // Normalize user input and format to exactly 2 decimals (string)
+   function formatToTwoDecimals(priceStr) {
+    if (priceStr === null || priceStr === undefined || String(priceStr).trim() === '') return '';
+    const parsed = parseFloat(String(priceStr).replace(',', '.'));
+    if (Number.isNaN(parsed)) return String(priceStr); // leave invalid input unchanged
+    return parsed.toFixed(2);
+  }
+
   return (
     <div className="max-w-3xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Create New Item</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow-md">
-        {/* Shop Select */}
-        {/* <div>
-          <label className="block text-gray-700 mb-1">Shop</label>
-          <select
-            name="shop_id"
-            value={form.shop_id}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded-md"
-            required
-          >
-            <option value="">Select Shop</option>
-            {shops.map((shop) => (
-              <option key={shop.id} value={shop.id}>
-                {shop.name}
-              </option>
-            ))}
-          </select>
-          {shopsLoading && <p className="text-gray-500 text-sm mt-1">Loading shops...</p>}
-        </div> */}
-
-        {/* Category Select */}
+        {/* Category */}
         <div>
           <label className="block text-gray-700 mb-1">Category</label>
           <select
@@ -95,7 +86,7 @@ export default function CreateItemPage() {
             required
           >
             <option value="">Select Category</option>
-            {categories.map((cat) => (
+            {categories?.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
@@ -130,12 +121,14 @@ export default function CreateItemPage() {
 
         {/* Price */}
         <div>
-          <label className="block text-gray-700 mb-1">Price (in cents)</label>
+          <label className="block text-gray-700 mb-1">Price (e.g. 1.43)</label>
           <input
-            type="number"
             name="price_cents"
             value={form.price_cents}
             onChange={handleChange}
+            onBlur={(e) =>
+              setForm((prev) => ({ ...prev, price_cents: formatToTwoDecimals(e.target.value) }))
+            }
             className="w-full border px-3 py-2 rounded-md"
             required
           />
