@@ -4,29 +4,29 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useItemStore } from '@/app/stores/useItemStore';
 import { useCategoryStore } from '@/app/stores/useCategoryStore';
-import { useShopStore } from '@/app/stores/useShopStore';
+// import { useShopStore } from '@/app/stores/useShopStore';
 
 export default function CreateItemPage() {
   const router = useRouter();
   const { createItem, loading } = useItemStore();
   const { categories, fetchCategories } = useCategoryStore();
-  const { shops, fetchShops, loading: shopsLoading } = useShopStore();
+  // const { shops, fetchShops, loading: shopsLoading } = useShopStore();
 
   const [form, setForm] = useState({
-    shop_id: '',
+   
     category_id: '',
     name: '',
     description: '',
     price_cents: '',
     image_file: null,
     is_available: true,
-    display_order: '',
+  
   });
 
   useEffect(() => {
     fetchCategories();
-    fetchShops();
-  }, [fetchCategories, fetchShops]);
+    // fetchShops();
+  }, [fetchCategories]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -44,13 +44,11 @@ export default function CreateItemPage() {
 
     try {
       const formData = new FormData();
-      formData.append('shop_id', form.shop_id);
       formData.append('category_id', form.category_id);
       formData.append('name', form.name);
       formData.append('description', form.description);
       formData.append('price_cents', form.price_cents);
       formData.append('is_available', form.is_available ? '1' : '0');
-      if (form.display_order) formData.append('display_order', form.display_order);
       if (form.image_file) formData.append('image_url', form.image_file);
 
       await createItem(formData); // make sure createItem handles FormData
@@ -67,7 +65,7 @@ export default function CreateItemPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow-md">
         {/* Shop Select */}
-        <div>
+        {/* <div>
           <label className="block text-gray-700 mb-1">Shop</label>
           <select
             name="shop_id"
@@ -84,7 +82,7 @@ export default function CreateItemPage() {
             ))}
           </select>
           {shopsLoading && <p className="text-gray-500 text-sm mt-1">Loading shops...</p>}
-        </div>
+        </div> */}
 
         {/* Category Select */}
         <div>
@@ -165,18 +163,6 @@ export default function CreateItemPage() {
             className="h-4 w-4"
           />
           <label className="text-gray-700">Available</label>
-        </div>
-
-        {/* Display Order */}
-        <div>
-          <label className="block text-gray-700 mb-1">Display Order</label>
-          <input
-            type="number"
-            name="display_order"
-            value={form.display_order}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded-md"
-          />
         </div>
 
         {/* Submit Button */}
