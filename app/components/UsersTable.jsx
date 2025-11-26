@@ -46,6 +46,7 @@ export default function UsersTable() {
 
   const [query, setQuery] = useState("");
   const [filterRole, setFilterRole] = useState(""); // New state for role filter
+  const [sortBy, setSortBy] = useState("name-asc"); // New state for sorting
   const [editingUser, setEditingUser] = useState(null);
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
@@ -57,8 +58,6 @@ export default function UsersTable() {
   useEffect(() => {
     if (isHydrated) fetchAllUsers();
   }, [isHydrated, fetchAllUsers]);
-
-  // ... (rest of the component)
 
   const filteredUsers = useMemo(() => {
     const lower = query.trim().toLowerCase();
@@ -74,15 +73,30 @@ export default function UsersTable() {
       allowed = allowed.filter((u) => u.role?.toLowerCase() === filterRole.toLowerCase());
     }
 
-    if (!lower) return allowed;
-    return allowed.filter((u) =>
-      [u.name, u.email, u.phone, u.role].some((f) =>
-        String(f || "")
-          .toLowerCase()
-          .includes(lower)
-      )
-    );
-  }, [users, query, isAdmin, isOwner, filterRole]); // Add filterRole to dependencies
+    // Apply search query
+    if (lower) {
+      allowed = allowed.filter((u) =>
+        [u.name, u.email, u.phone, u.role].some((f) =>
+          String(f || "")
+            .toLowerCase()
+            .includes(lower)
+        )
+      );
+    }
+
+    // Apply sorting
+    const [sortField, sortOrder] = sortBy.split("-");
+    allowed.sort((a, b) => {
+      const aValue = String(a[sortField] || "").toLowerCase();
+      const bValue = String(b[sortField] || "").toLowerCase();
+
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return allowed;
+  }, [users, query, isAdmin, isOwner, filterRole, sortBy]); // Add sortBy to dependencies
 
   const userToDelete = users.find((u) => u.id === deletingUserId);
 
@@ -235,6 +249,20 @@ export default function UsersTable() {
             <option value="admin">{translations.admin || "Admin"}</option>
             <option value="owner">{translations.owner || "Owner"}</option>
             <option value="customer">{translations.customer || "Customer"}</option>
+          </select>
+
+          {/* New Sort by dropdown */}
+          <select
+            className="w-full md:w-48 border rounded-lg px-3 py-2 text-sm bg-white shadow-sm outline-none"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="name-asc">{translations.sortByNameAsc || "Name (A-Z)"}</option>
+            <option value="name-desc">{translations.sortByNameDesc || "Name (Z-A)"}</option>
+            <option value="email-asc">{translations.sortByEmailAsc || "Email (A-Z)"}</option>
+            <option value="email-desc">{translations.sortByEmailDesc || "Email (Z-A)"}</option>
+            <option value="role-asc">{translations.sortByRoleAsc || "Role (A-Z)"}</option>
+            <option value="role-desc">{translations.sortByRoleDesc || "Role (Z-A)"}</option>
           </select>
 
           {isAdmin && (
