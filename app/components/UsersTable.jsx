@@ -8,19 +8,14 @@ import {
   ArrowPathIcon,
   PencilSquareIcon,
   UserGroupIcon,
-  ExclamationTriangleIcon,
   UserPlusIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { useLanguageContext } from "../components/LanguageProviderClient";
 import { useToast } from "../components/ToastNotification";
-
-/*
-  Rewritten UsersTable component
-  - Fixes JSX parse errors (properly closed tags)
-  - Slightly modernized UI with search, avatar initials, and nicer modals
-  - Preserves original store calls and behaviour
-*/
+import CreateUserModal from "./users/CreateUserModal";
+import EditUserModal from "./users/EditUserModal";
+import DeleteUserModal from "./users/DeleteUserModal";
 
 const ROLE_BADGES = {
   admin: "bg-red-100 text-red-800",
@@ -46,26 +41,14 @@ export default function UsersTable() {
   const { translations = {} } = useLanguageContext();
   const showToast = useToast();
 
-  // Local UI state
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const isOwner = user?.role?.toLowerCase() === "owner";
+
   const [query, setQuery] = useState("");
+  const [filterRole, setFilterRole] = useState(""); // New state for role filter
   const [editingUser, setEditingUser] = useState(null);
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "customer",
-  });
-  const [newUserData, setNewUserData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    password_confirmation: "",
-    role: "customer",
-  });
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -75,37 +58,22 @@ export default function UsersTable() {
     if (isHydrated) fetchAllUsers();
   }, [isHydrated, fetchAllUsers]);
 
-  if (!isHydrated) {
-    return (
-      <div className="flex items-center justify-center min-h-[40vh] text-gray-500 bg-gray-50 rounded-xl p-6">
-        <ArrowPathIcon className="h-6 w-6 animate-spin text-blue-500 mr-3" />
-        <span>{translations.loadingAuth || "Loading authentication..."}</span>
-      </div>
-    );
-  }
+  // ... (rest of the component)
 
-  if (!user) {
-    return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-center text-red-700">
-        <p>
-          {translations.accessDenied || "Access Denied. You must be logged in."}
-        </p>
-      </div>
-    );
-  }
-
-  const isAdmin = user?.role?.toLowerCase() === "admin";
-  const isOwner = user?.role?.toLowerCase() === "owner";
-
-  // Filter users based on current user role (keeps original intent)
   const filteredUsers = useMemo(() => {
     const lower = query.trim().toLowerCase();
     const base = users || [];
-    let allowed = base.filter((u) => {
+    let allowed = base.filter(Boolean).filter((u) => {
       if (isAdmin) return u.role?.toLowerCase() !== "admin";
       if (isOwner) return u.role?.toLowerCase() === "customer";
       return false;
     });
+
+    // Apply role filter if filterRole is set
+    if (filterRole) {
+      allowed = allowed.filter((u) => u.role?.toLowerCase() === filterRole.toLowerCase());
+    }
+
     if (!lower) return allowed;
     return allowed.filter((u) =>
       [u.name, u.email, u.phone, u.role].some((f) =>
@@ -114,11 +82,10 @@ export default function UsersTable() {
           .includes(lower)
       )
     );
-  }, [users, query, isAdmin, isOwner]);
+  }, [users, query, isAdmin, isOwner, filterRole]); // Add filterRole to dependencies
 
   const userToDelete = users.find((u) => u.id === deletingUserId);
 
-  // Handlers
   const startDelete = (id) => {
     if (!isAdmin)
       return showToast(
@@ -157,23 +124,13 @@ export default function UsersTable() {
         "error"
       );
     setEditingUser(u);
-    setFormData({
-      name: u.name || "",
-      email: u.email || "",
-      phone: u.phone || "",
-      role: u.role || "customer",
-    });
   };
 
-  const handleChange = (e) =>
-    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+  const handleUpdate = async (formData) => {
     if (!isAdmin || !editingUser) return;
     setIsUpdating(true);
     try {
-      await updateUser({ id: editingUser.id, ...formData });
+      await updateUser(formData);
       setEditingUser(null);
       await fetchAllUsers();
       showToast(
@@ -191,11 +148,7 @@ export default function UsersTable() {
     }
   };
 
-  const handleNewUserChange = (e) =>
-    setNewUserData((p) => ({ ...p, [e.target.name]: e.target.value }));
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
+  const handleCreate = async (newUserData) => {
     if (!isAdmin)
       return showToast(
         translations.noPermission || "You don't have permission",
@@ -212,14 +165,6 @@ export default function UsersTable() {
     try {
       await createUser(newUserData);
       setIsCreatingUser(false);
-      setNewUserData({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        password_confirmation: "",
-        role: "customer",
-      });
       await fetchAllUsers();
       showToast(
         translations.userCreatedSuccessfully || "User created successfully!",
@@ -236,7 +181,6 @@ export default function UsersTable() {
     }
   };
 
-  // Small helper for avatar initials
   const initials = (name = "") =>
     name
       .split(" ")
@@ -276,6 +220,18 @@ export default function UsersTable() {
             />
           </div>
 
+          {/* New Filter by Role dropdown */}
+          <select
+            className="w-full md:w-48 border rounded-lg px-3 py-2 text-sm bg-white shadow-sm outline-none"
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+          >
+            <option value="">{translations.allRoles || "All Roles"}</option>
+            <option value="admin">{translations.admin || "Admin"}</option>
+            <option value="owner">{translations.owner || "Owner"}</option>
+            <option value="customer">{translations.customer || "Customer"}</option>
+          </select>
+
           {isAdmin && (
             <>
               <button
@@ -305,7 +261,6 @@ export default function UsersTable() {
         </div>
       </div>
 
-      {/* status / error */}
       {(loading || isCreating || isUpdating || isDeleting) && (
         <div className="py-6 text-center text-blue-600 flex items-center justify-center gap-3">
           <ArrowPathIcon className="h-5 w-5 animate-spin" />
@@ -320,7 +275,6 @@ export default function UsersTable() {
         </div>
       )}
 
-      {/* table */}
       {!loading && filteredUsers.length > 0 ? (
         <div className="bg-white shadow-lg rounded-2xl border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
@@ -415,289 +369,31 @@ export default function UsersTable() {
         )
       )}
 
-      {/* -------------------- CREATE USER MODAL -------------------- */}
-      {isCreatingUser && isAdmin && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => !isCreating && setIsCreatingUser(false)}
-            aria-hidden="true"
+          <CreateUserModal
+            isOpen={isCreatingUser && isAdmin}
+            onClose={() => setIsCreatingUser(false)}
+            onSubmit={handleCreate}
+            isCreating={isCreating}
+            translations={translations}
           />
-          <div className="relative bg-white max-w-lg w-full rounded-2xl p-6 shadow-2xl transform transition">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                {translations.addNewUser || "Add New User"}
-              </h3>
-              <button
-                onClick={() => setIsCreatingUser(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.name || "Name"}
-                </label>
-                <input
-                  required
-                  name="name"
-                  value={newUserData.name}
-                  onChange={handleNewUserChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.email || "Email"}
-                </label>
-                <input
-                  required
-                  type="email"
-                  name="email"
-                  value={newUserData.email}
-                  onChange={handleNewUserChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.phone || "Phone"}
-                </label>
-                <input
-                  name="phone"
-                  value={newUserData.phone}
-                  onChange={handleNewUserChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    {translations.password || "Password"}
-                  </label>
-                  <input
-                    required
-                    minLength={8}
-                    type="password"
-                    name="password"
-                    value={newUserData.password}
-                    onChange={handleNewUserChange}
-                    className="mt-1 block w-full border rounded-lg px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    {translations.confirmPassword || "Confirm Password"}
-                  </label>
-                  <input
-                    required
-                    minLength={8}
-                    type="password"
-                    name="password_confirmation"
-                    value={newUserData.password_confirmation}
-                    onChange={handleNewUserChange}
-                    className="mt-1 block w-full border rounded-lg px-3 py-2"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.role || "Role"}
-                </label>
-                <select
-                  name="role"
-                  value={newUserData.role}
-                  onChange={handleNewUserChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                >
-                  <option value="owner">{translations.owner || "Owner"}</option>
-                  <option value="customer">
-                    {translations.customer || "Customer"}
-                  </option>
-                </select>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCreatingUser(false)}
-                  className="px-4 py-2 bg-gray-100 rounded-lg"
-                >
-                  {translations.cancel || "Cancel"}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg flex items-center gap-2"
-                >
-                  {isCreating && (
-                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                  )}
-                  {translations.createUser || "Create User"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* -------------------- EDIT USER MODAL -------------------- */}
-      {editingUser && isAdmin && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => !isUpdating && setEditingUser(null)}
-            aria-hidden
+          <EditUserModal
+            isOpen={!!editingUser && isAdmin}
+            onClose={() => setEditingUser(null)}
+            onSubmit={handleUpdate}
+            isUpdating={isUpdating}
+            editingUser={editingUser}
+            translations={translations}
           />
-          <div className="relative bg-white max-w-lg w-full rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                {translations.editingUser || "Editing User"}:{" "}
-                <span className="text-indigo-600">{editingUser.name}</span>
-              </h3>
-              <button
-                onClick={() => setEditingUser(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-            <form onSubmit={handleUpdate} className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.name || "Name"}
-                </label>
-                <input
-                  required
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.email || "Email"}
-                </label>
-                <input
-                  required
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.phone || "Phone"}
-                </label>
-                <input
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  {translations.role || "Role"}
-                </label>
-                <select
-                  required
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2"
-                >
-                  <option value="owner">{translations.owner || "Owner"}</option>
-                  <option value="customer">
-                    {translations.customer || "Customer"}
-                  </option>
-                </select>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setEditingUser(null)}
-                  className="px-4 py-2 bg-gray-100 rounded-lg"
-                >
-                  {translations.cancel || "Cancel"}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2"
-                >
-                  {isUpdating && (
-                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                  )}
-                  {translations.saveChanges || "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* -------------------- DELETE CONFIRMATION -------------------- */}
-      {deletingUserId && userToDelete && isAdmin && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => !isDeleting && setDeletingUserId(null)}
-            aria-hidden
+          <DeleteUserModal
+            isOpen={!!deletingUserId && isAdmin}
+            onClose={() => setDeletingUserId(null)}
+            onConfirm={handleConfirmedDelete}
+            isDeleting={isDeleting}
+            userToDelete={userToDelete}
+            translations={translations}
           />
-          <div className="relative bg-white max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
-            </div>
-            <h3 className="mt-4 text-lg font-semibold text-gray-900">
-              {translations.confirmDeletion || "Confirm Deletion"}
-            </h3>
-            <p className="mt-2 text-sm text-gray-600">
-              {translations.confirmDeleteMessage ||
-                "Are you sure you want to delete user"}{" "}
-              <span className="font-semibold text-red-600">
-                {userToDelete.name}
-              </span>
-              ?{" "}
-              {translations.thisCannotBeUndone ||
-                "This action cannot be undone."}
-            </p>
-
-            <div className="mt-6 flex justify-center gap-3">
-              <button
-                onClick={() => setDeletingUserId(null)}
-                disabled={isDeleting}
-                className="px-4 py-2 bg-gray-100 rounded-lg"
-              >
-                {translations.cancel || "Cancel"}
-              </button>
-              <button
-                onClick={handleConfirmedDelete}
-                disabled={isDeleting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2"
-              >
-                {isDeleting && (
-                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                )}
-                {translations.deletePermanently || "Delete Permanently"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import UserTable from '../../components/UsersTable';
 
 export default function UsersPage() {
