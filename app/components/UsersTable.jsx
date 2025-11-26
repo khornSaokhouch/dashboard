@@ -191,21 +191,26 @@ export default function UsersTable() {
 
   return (
     <div className="p-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <UserGroupIcon className="h-8 w-8 text-indigo-600" />
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              {translations.userManagement || "User Management"}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {translations.manageUsersDesc ||
-                "Create, edit or remove users from the system."}
-            </p>
+      <div className="flex flex-col gap-4 mb-6">
+        {/* Title and Description */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <UserGroupIcon className="h-8 w-8 text-indigo-600" />
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {translations.userManagement || "User Management"}
+              </h1>
+              <p className="text-sm text-gray-500">
+                {translations.manageUsersDesc ||
+                  "Create, edit or remove users from the system."}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        {/* Search, Filter, and Buttons */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-3 w-full">
+          {/* Search Bar */}
           <div className="flex items-center bg-white border rounded-lg px-3 py-2 shadow-sm w-full md:w-72">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-2" />
             <input
