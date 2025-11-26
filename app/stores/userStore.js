@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { request } from '../util/request';
-import { useAuthStore } from './authStore';
+import { create } from "zustand";
+import { request } from "../util/request";
+import { useAuthStore } from "./authStore";
 
 export const useUserStore = create((set, get) => ({
   user: null, // current logged-in user
@@ -14,20 +14,21 @@ export const useUserStore = create((set, get) => ({
   fetchUser: async () => {
     const token = useAuthStore.getState().token;
     if (!token) {
-      set({ error: 'No token found. Please log in.' });
+      set({ error: "No token found. Please log in." });
       return null;
     }
 
     set({ loading: true, error: null });
     try {
-      const res = await request('/profile', 'GET', null, {
+      const res = await request("/profile", "GET", null, {
         headers: { Authorization: `Bearer ${token}` },
       });
       set({ user: res.user, loading: false });
       return res.user;
     } catch (err) {
       set({
-        error: err.response?.data?.message || err.message || 'Failed to fetch user',
+        error:
+          err.response?.data?.message || err.message || "Failed to fetch user",
         loading: false,
       });
       return null;
@@ -39,20 +40,20 @@ export const useUserStore = create((set, get) => ({
   // -------------------------------
   fetchAllUsers: async () => {
     const token = useAuthStore.getState().token;
-    if (!token) throw new Error('No token found. Please log in.');
+    if (!token) throw new Error("No token found. Please log in.");
 
     set({ loading: true, error: null });
     try {
-      const res = await request('/users', 'GET', null, {
+      const res = await request("/users", "GET", null, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const usersArray = Array.isArray(res) ? res : res.users || [];
 
       // ✅ Normalize role and id
-      const normalizedUsers = usersArray.map(u => ({
+      const normalizedUsers = usersArray.map((u) => ({
         ...u,
-        role: typeof u.role === 'object' ? u.role.name : u.role || 'user',
+        role: typeof u.role === "object" ? u.role.name : u.role || "user",
         id: u.id ?? u.user_id,
       }));
 
@@ -60,7 +61,8 @@ export const useUserStore = create((set, get) => ({
       return normalizedUsers;
     } catch (err) {
       set({
-        error: err.response?.data?.message || err.message || 'Failed to fetch users',
+        error:
+          err.response?.data?.message || err.message || "Failed to fetch users",
         loading: false,
       });
       return [];
@@ -72,14 +74,22 @@ export const useUserStore = create((set, get) => ({
   // -------------------------------
   updateUser: async (updatedData) => {
     const token = useAuthStore.getState().token;
-    if (!token) throw new Error('No token found. Please log in.');
-  
+    if (!token) throw new Error("No token found. Please log in.");
+
     set({ loading: true, error: null });
     try {
-      const res = await request(`/admin/users/${updatedData.id}`, 'PUT', updatedData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      });
-  
+      const res = await request(
+        `/admin/users/${updatedData.id}`,
+        "PUT",
+        updatedData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       // Update users in store
       set((state) => ({
         users: state.users.map((u) =>
@@ -87,27 +97,27 @@ export const useUserStore = create((set, get) => ({
         ),
         loading: false,
       }));
-  
+
       return res.data;
     } catch (err) {
       set({
-        error: err.response?.data?.message || err.message || 'Update failed',
+        error: err.response?.data?.message || err.message || "Update failed",
         loading: false,
       });
       throw err;
     }
   },
-  
+
   // -------------------------------
   // Delete a user
   // -------------------------------
   deleteUser: async (id) => {
     const token = useAuthStore.getState().token;
-    if (!token) throw new Error('No token found. Please log in.');
+    if (!token) throw new Error("No token found. Please log in.");
 
     set({ loading: true, error: null });
     try {
-      await request(`/users/${id}`, 'DELETE', null, {
+      await request(`/users/${id}`, "DELETE", null, {
         headers: { Authorization: `Bearer ${token}` },
       });
       set((state) => ({
@@ -115,8 +125,50 @@ export const useUserStore = create((set, get) => ({
         loading: false,
       }));
     } catch (err) {
-      console.error('Error deleting user:', err);
-      set({ error: err.message || 'Failed to delete user', loading: false });
+      console.error("Error deleting user:", err);
+      set({ error: err.message || "Failed to delete user", loading: false });
+      throw err;
+    }
+  },
+
+  // -------------------------------
+  // Create a new user
+  // -------------------------------
+  createUser: async (newUserData) => {
+    const token = useAuthStore.getState().token;
+    if (!token) throw new Error("No token found. Please log in.");
+
+    set({ loading: true, error: null });
+    try {
+      const res = await request("/register", "POST", newUserData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const newUser = res.user || res;
+
+      const normalizedUser = {
+        ...newUser,
+        role: typeof newUser.role === 'object' ? newUser.role.name : newUser.role || 'user',
+        id: newUser.id ?? newUser.user_id,
+      };
+
+      set((state) => ({
+        users: [
+          ...state.users,
+          normalizedUser,
+        ],
+        loading: false,
+      }));
+
+      return normalizedUser;
+    } catch (err) {
+      set({
+        error: err.response?.data?.message || err.message || "Creation failed",
+        loading: false,
+      });
       throw err;
     }
   },
