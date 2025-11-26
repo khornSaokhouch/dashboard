@@ -18,6 +18,7 @@ export default function AdminLayout({ children }) {
 
   const { translations } = useLanguageContext();
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     const init = async () => {
@@ -57,11 +58,11 @@ export default function AdminLayout({ children }) {
   return (
     <FontWrapper>
       <div className="text-gray-900 antialiased h-screen overflow-hidden flex">
-        <aside className="w-64 h-screen fixed left-0 top-0 bottom-0 z-50">
-          <SidebarAdmin />
+        <aside className={`h-screen fixed left-0 top-0 bottom-0 z-50 transition-all duration-300 ${open ? "w-64" : "w-20"}`}>
+          <SidebarAdmin open={open} setOpen={setOpen} />
         </aside>
 
-        <div className="flex flex-col flex-1 h-screen overflow-hidden ml-64">
+        <div className={`flex flex-col flex-1 h-screen overflow-hidden transition-all duration-300 ${open ? "ml-64" : "ml-20"}`}>
           <header className="sticky top-0 z-40">
             <NavbarAdmin />
           </header>
