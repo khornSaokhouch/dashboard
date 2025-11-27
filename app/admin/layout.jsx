@@ -8,8 +8,7 @@ import { useAuthStore } from "../stores/authStore";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useLanguageContext } from "../components/LanguageProviderClient";
 import FontWrapper from "../components/FontWrapper";
-
-import { Toaster } from "react-hot-toast";
+import { ToastProvider } from "../components/ToastNotification";
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -59,20 +58,21 @@ export default function AdminLayout({ children }) {
 
   return (
     <FontWrapper>
-      <Toaster />
-      <div className="text-gray-900 antialiased h-screen overflow-hidden flex">
-        <aside className={`h-screen fixed left-0 top-0 bottom-0 z-50 transition-all duration-300 ${open ? "w-64" : "w-20"}`}>
-          <SidebarAdmin open={open} setOpen={setOpen} />
-        </aside>
+      <ToastProvider>
+        <div className="text-gray-900 antialiased h-screen overflow-hidden flex">
+          <aside className={`h-screen fixed left-0 top-0 bottom-0 z-50 transition-all duration-300 ${open ? "w-64" : "w-20"}`}>
+            <SidebarAdmin open={open} setOpen={setOpen} />
+          </aside>
 
-        <div className={`flex flex-col flex-1 h-screen overflow-hidden transition-all duration-300 ${open ? "ml-64" : "ml-20"}`}>
-          <header className="sticky top-0 z-40">
-            <NavbarAdmin />
-          </header>
+          <div className={`flex flex-col flex-1 h-screen overflow-hidden transition-all duration-300 ${open ? "ml-64" : "ml-20"}`}>
+            <header className="sticky top-0 z-40">
+              <NavbarAdmin />
+            </header>
 
-          <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+            <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+          </div>
         </div>
-      </div>
+      </ToastProvider>
     </FontWrapper>
   );
 }

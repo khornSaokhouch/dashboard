@@ -155,12 +155,12 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
         {/* Owner select */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.ownerUserId || "Owner User"}</label>
+            <label className="block text-sm font-medium text-gray-700">{t.ownerUserId || "Owner User"}</label>
             <select
               name="owner_user_id"
               value={formData.owner_user_id}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:ring-blue-500 focus:border-blue-500 transition"
+              className="mt-1 block w-full border rounded-lg px-3 py-2 bg-white focus:ring-emerald-500 focus:border-emerald-500 transition"
             >
               <option value="">{t.selectOwner || "Select Owner"}</option>
               {users?.filter(u => u.role === "owner")?.map(owner => (
@@ -175,39 +175,39 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
 
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t.name || "Shop Name"}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.name || "Shop Name"}</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            className="mt-1 block w-full border rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
           />
         </div>
 
         {/* Location */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t.location || "Location Address"}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.location || "Location Address"}</label>
           <input
             type="text"
             name="location"
             value={formData.location}
             onChange={handleChange}
             required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            className="mt-1 block w-full border rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
           />
         </div>
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t.status || "Status"}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.status || "Status"}</label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
             required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:ring-blue-500 focus:border-blue-500 transition"
+            className="mt-1 block w-full border rounded-lg px-3 py-2 bg-white focus:ring-emerald-500 focus:border-emerald-500 transition"
           >
             <option value="1">{t.active || "Active"}</option>
             <option value="0">{t.inactive || "Inactive"}</option>
@@ -221,26 +221,26 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.latitude || "Latitude"}</label>
+            <label className="block text-sm font-medium text-gray-700">{t.latitude || "Latitude"}</label>
             <input
               type="number"
               step="any"
               name="latitude"
               value={formData.latitude}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full border rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.longitude || "Longitude"}</label>
+            <label className="block text-sm font-medium text-gray-700">{t.longitude || "Longitude"}</label>
             <input
               type="number"
               step="any"
               name="longitude"
               value={formData.longitude}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full border rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
 
@@ -250,10 +250,10 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
             disabled={locationStatus === "loading"}
             className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
               locationStatus === "loading"
-                ? "bg-blue-400 text-white cursor-not-allowed"
+                ? "bg-emerald-400 text-white cursor-not-allowed"
                 : locationStatus === "success"
                 ? "bg-green-500 text-white"
-                : "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white"
             }`}
           >
             {locationStatus === "loading" && <ArrowPathIcon className="h-5 w-5 animate-spin" />}
@@ -264,13 +264,13 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
 
           {/* open_time (placed visually in grid; you can move it if desired) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.openTime || "Open Time"}</label>
+            <label className="block text-sm font-medium text-gray-700">{t.openTime || "Open Time"}</label>
             <input
               type="time"
               name="open_time"
               value={formData.open_time}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="mt-1 block w-full border rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
             />
             <p className="text-xs text-gray-500 mt-1">{t.openTimeHelp || "Optional: shop opening time (HH:MM)."}</p>
           </div>
@@ -278,13 +278,13 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.closeTime || "Close Time"}</label>
+            <label className="block text-sm font-medium text-gray-700">{t.closeTime || "Close Time"}</label>
             <input
               type="time"
               name="close_time"
               value={formData.close_time}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="mt-1 block w-full border rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
             />
             <p className="text-xs text-gray-500 mt-1">{t.closeTimeHelp || "Optional: shop closing time (HH:MM)."}</p>
           </div>
@@ -292,7 +292,7 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
 
         {/* Image upload + preview */}
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t.image || "Image"}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.image || "Image"}</label>
           <input type="file" name="image" accept="image/*" onChange={handleFileChange} className="w-full text-sm" />
           <p className="text-xs text-gray-500 mt-1">{t.imageHelp || "Optional: upload an image (jpeg, png, gif, webp). Max 2MB."}</p>
 
@@ -319,7 +319,7 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
             type="button"
             onClick={onBackClick}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition disabled:opacity-70"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-300 transition disabled:opacity-70"
           >
             <ArrowLeftIcon className="h-5 w-5" />
             {t.backToShops || "Back"}
@@ -329,7 +329,7 @@ export default function ShopForm({ initialData = {}, onSubmit, loading, onBackCl
         <button
           type="submit"
           disabled={loading}
-          className="ml-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:bg-blue-400"
+          className="ml-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition disabled:bg-emerald-400"
         >
           {loading && <ArrowPathIcon className="h-5 w-5 animate-spin" />}
           {submitButtonText}

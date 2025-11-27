@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useCategoryStore } from "@/app/stores/useCategoryStore";
 import Image from "next/image";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/app/components/ToastNotification";
 
 export default function EditCategoryPage() {
   const router = useRouter();
   const params = useParams();
   const categoryId = params?.id;
   const { fetchCategoryById, updateCategory, loading } = useCategoryStore();
+  const showToast = useToast();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,7 +19,6 @@ export default function EditCategoryPage() {
     image_category: null, // File or null
   });
 
-  const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
   // Load category once
@@ -40,7 +40,7 @@ export default function EditCategoryPage() {
         setPreviewImage(category.image_url ?? category.image_category_url ?? null);
       } catch (err) {
         if (!mounted) return;
-        toast.error("Failed to load category.");
+        showToast("Failed to load category.", "error");
       }
     };
 
@@ -85,10 +85,9 @@ export default function EditCategoryPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
 
     if (!formData.name?.trim()) {
-      toast.error("Please enter a category name.");
+      showToast("Please enter a category name.", "error");
       return;
     }
 
@@ -115,20 +114,18 @@ export default function EditCategoryPage() {
         } catch (err) {}
       }
 
-      toast.success("Category updated successfully!");
+      showToast("Category updated successfully!", "success");
       router.push("/admin/categories");
     } catch (err) {
       // normalize message
       const msg = err?.response?.data?.message || err?.message || "Failed to update category";
-      toast.error(msg);
+      showToast(msg, "error");
     }
   };
 
   return (
     <div className="p-8 max-w-2xl mx-auto bg-white shadow-md rounded-md">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Edit Category</h1>
-
-      {error && <p className="text-red-500 mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Category Name */}

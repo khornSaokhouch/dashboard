@@ -10,14 +10,13 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
-export default function CreateCategoryModal({
+export default function EditCategoryModal({
   isOpen,
   onClose,
-  onSubmit,
-  isCreating,
+  category,
   translations = {},
 }) {
-  const { createCategory, loading } = useCategoryStore();
+  const { updateCategory, loading } = useCategoryStore();
   const showToast = useToast();
 
   const [formData, setFormData] = useState({
@@ -27,6 +26,17 @@ export default function CreateCategoryModal({
   });
 
   const [previewImage, setPreviewImage] = useState(null);
+
+  useEffect(() => {
+    if (category) {
+      setFormData({
+        name: category.name || "",
+        status: category.status || "1",
+        image_category: null,
+      });
+      setPreviewImage(category.image_category_url || category.image_url || null);
+    }
+  }, [category]);
 
   useEffect(() => {
     return () => {
@@ -73,19 +83,20 @@ export default function CreateCategoryModal({
       const data = new FormData();
       data.append("name", formData.name.trim());
       data.append("status", formData.status);
+      data.append("_method", "PUT");
 
       if (formData.image_category instanceof File) {
         data.append("image_category", formData.image_category);
       }
 
-      await createCategory(data);
+      await updateCategory(category.id, data);
 
       if (previewImage?.startsWith("blob:")) {
         URL.revokeObjectURL(previewImage);
       }
 
       showToast(
-        translations.categoryCreated || "Category created successfully!",
+        translations.categoryUpdated || "Category updated successfully!",
         "success"
       );
       onClose();
@@ -93,8 +104,8 @@ export default function CreateCategoryModal({
       const msg =
         err?.response?.data?.message ||
         err?.message ||
-        translations.failedToCreateCategory ||
-        "Failed to create category";
+        translations.failedToUpdateCategory ||
+        "Failed to update category";
       showToast(msg, "error");
     }
   };
@@ -105,13 +116,13 @@ export default function CreateCategoryModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/40"
-        onClick={() => !isCreating && onClose()}
+        onClick={() => !loading && onClose()}
         aria-hidden="true"
       />
       <div className="relative bg-white max-w-lg w-full rounded-2xl p-6 shadow-2xl transform transition">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">
-            {translations.createNewCategory || "Create New Category"}
+            {translations.editCategory || "Edit Category"}
           </h3>
           <button
             onClick={onClose}
@@ -172,12 +183,12 @@ export default function CreateCategoryModal({
                   <>
                     <ArrowUpOnSquareIcon className="mx-auto h-8 w-8 text-gray-400" />
                     <label
-                      htmlFor="image_category"
+                      htmlFor="image_category_edit"
                       className="cursor-pointer text-gray-600 hover:text-gray-800 text-sm"
                     >
                       <span>{translations.uploadFile || "Upload File"}</span>
                       <input
-                        id="image_category"
+                        id="image_category_edit"
                         name="image_category"
                         type="file"
                         className="sr-only"
@@ -229,11 +240,11 @@ export default function CreateCategoryModal({
             </button>
             <button
               type="submit"
-              disabled={isCreating}
+              disabled={loading}
               className="px-4 py-2 bg-emerald-600 text-white rounded-lg flex items-center gap-2"
             >
-              {isCreating && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-              {translations.createCategory || "Create Category"}
+              {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+              {translations.updateCategory || "Update Category"}
             </button>
           </div>
         </form>
@@ -241,4 +252,3 @@ export default function CreateCategoryModal({
     </div>
   );
 }
-

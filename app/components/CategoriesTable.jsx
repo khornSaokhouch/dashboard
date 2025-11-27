@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCategoryStore } from "@/app/stores/useCategoryStore";
 import { TrashIcon, PencilSquareIcon, PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import { toast } from "react-hot-toast";
+
 import CreateCategoryModal from "./admin/categories/CreateCategoryModal";
+import EditCategoryModal from "./admin/categories/EditCategoryModal";
+import { useToast } from "./ToastNotification";
 
 export default function CategoriesTable({ userRole = "owner" }) {
   const router = useRouter();
@@ -14,6 +16,9 @@ export default function CategoriesTable({ userRole = "owner" }) {
   const [showDelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const showToast = useToast();
 
   // filter state
   const [filterName, setFilterName] = useState("");
@@ -35,13 +40,18 @@ export default function CategoriesTable({ userRole = "owner" }) {
     setShowDelete(true);
   };
 
+  const handleEditClick = (category) => {
+    setEditingCategory(category);
+    setShowEditModal(true);
+  };
+
   const confirmDelete = async () => {
     try {
       await deleteCategory(deleteId);
       setShowDelete(false);
-      toast.success("Category deleted successfully.");
+      showToast("Category deleted successfully.", "success");
     } catch (err) {
-      toast.error("Failed to delete category: " + (err?.message || err));
+      showToast("Failed to delete category: " + (err?.message || err), "error");
     }
   };
 
@@ -80,10 +90,11 @@ export default function CategoriesTable({ userRole = "owner" }) {
 
   return (
     <div className="p-8">
-      {showCreateModal && <CreateCategoryModal closeModal={() => setShowCreateModal(false)} />}
+      <CreateCategoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      <EditCategoryModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} category={editingCategory} />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Categories Management</h1>
-        {userRole === "admin" && (
+        {(userRole === "admin" || userRole === "owner") && (
           <div className="flex gap-2">
             <button
               onClick={fetchCategories}
@@ -205,7 +216,7 @@ export default function CategoriesTable({ userRole = "owner" }) {
                       {userRole === "admin" ? (
                         <>
                           <button
-                            onClick={() => router.push(`/admin/categories/edit/${cat.id}`)}
+                            onClick={() => handleEditClick(cat)}
                             className="text-blue-500 hover:text-blue-700 transition"
                           >
                             <PencilSquareIcon className="h-5 w-5 inline" />

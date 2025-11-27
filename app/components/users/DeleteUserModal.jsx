@@ -19,7 +19,7 @@ export default function DeleteUserModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-gray-200 bg-opacity-75"
+        className="absolute inset-0 bg-black/40"
         onClick={() => !isDeleting && onClose()}
         aria-hidden
       />

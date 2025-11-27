@@ -43,7 +43,7 @@ export default function EditUserModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-gray-200 bg-opacity-75"
+        className="absolute inset-0 bg-black/40"
         onClick={() => !isUpdating && onClose()}
         aria-hidden
       />
@@ -51,7 +51,7 @@ export default function EditUserModal({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">
             {translations.editingUser || "Editing User"}:{" "}
-            <span className="text-indigo-600">{editingUser?.name}</span>
+            <span className="text-emerald-600">{editingUser?.name}</span>
           </h3>
           <button
             onClick={onClose}
@@ -129,10 +129,10 @@ export default function EditUserModal({
             <button
               type="submit"
               disabled={isUpdating}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2"
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg flex items-center gap-2"
             >
               {isUpdating && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-              {translations.saveChanges || "Save Changes"}
+              {translations.updateUser || "Update User"}
             </button>
           </div>
         </form>
