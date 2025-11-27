@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useItemStore } from '@/app/stores/useItemStore';
 import { useCategoryStore } from '@/app/stores/useCategoryStore';
+import Image from 'next/image';
 
 export default function CreateItemPage() {
   const router = useRouter();
@@ -15,19 +16,48 @@ export default function CreateItemPage() {
     name: '',
     description: '',
     price_cents: '',
-    image_file: null,
+    image_file: null,          // File object
     is_available: true,
+    current_image_url: '',     // remote URL, if editing existing item (kept for fallback)
   });
 
+  // local preview URL for selected file
+  const [localPreviewUrl, setLocalPreviewUrl] = useState(null);
+
   useEffect(() => {
+    // load categories on mount
     fetchCategories();
-  }, [fetchCategories]);
+    // cleanup preview on unmount
+    return () => {
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fetchCategories typically stable from store; if not, add to deps
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
+    // File input handling
     if (type === 'file') {
-      setForm((prev) => ({ ...prev, [name]: files[0] }));
+      const file = files && files[0];
+
+      // Revoke previous preview url if exists
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+        setLocalPreviewUrl(null);
+      }
+
+      if (file) {
+        // create new preview and set file
+        const previewUrl = URL.createObjectURL(file);
+        setLocalPreviewUrl(previewUrl);
+        setForm((prev) => ({ ...prev, image_file: file }));
+      } else {
+        // user cleared the file input: remove file and keep any remote url
+        setForm((prev) => ({ ...prev, image_file: null }));
+      }
       return;
     }
 
@@ -36,6 +66,7 @@ export default function CreateItemPage() {
       return;
     }
 
+    // default text/select/textarea handling
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -47,9 +78,19 @@ export default function CreateItemPage() {
       formData.append('category_id', form.category_id);
       formData.append('name', form.name);
       formData.append('description', form.description);
-      formData.append('price_cents', form.price_cents);
+
+      const parsed = parseFloat(String(form.price_cents).replace(',', '.'));
+      if (isNaN(parsed)) {
+        throw new Error('Invalid price. Please enter a numeric value like 2.43');
+      }
+      const cents = Math.round(parsed * 100);
+      formData.append('price_cents', String(cents));
+
       formData.append('is_available', form.is_available ? '1' : '0');
 
+      // Append file if present. Use the field name your backend expects.
+      // Some backends expect 'image' or 'image_file' or 'image_url' (if sending URL).
+      // Here we'll append as 'image' — change to 'image_url' if your server expects that name.
       if (form.image_file) {
         formData.append('image_url', form.image_file);
       }
@@ -58,12 +99,14 @@ export default function CreateItemPage() {
       alert('Item created successfully!');
       router.push('/admin/items');
     } catch (err) {
-      alert('Failed to create item: ' + err.message);
+      // make sure err.message exists
+      const msg = err?.message || String(err);
+      alert('Failed to create item: ' + msg);
     }
   };
 
-   // Normalize user input and format to exactly 2 decimals (string)
-   function formatToTwoDecimals(priceStr) {
+  // Normalize user input and format to exactly 2 decimals (string)
+  function formatToTwoDecimals(priceStr) {
     if (priceStr === null || priceStr === undefined || String(priceStr).trim() === '') return '';
     const parsed = parseFloat(String(priceStr).replace(',', '.'));
     if (Number.isNaN(parsed)) return String(priceStr); // leave invalid input unchanged
@@ -144,6 +187,14 @@ export default function CreateItemPage() {
             onChange={handleChange}
             className="w-full"
           />
+          {/* Preview area: prefer local preview if file chosen, otherwise show remote current_image_url */}
+          <div className="mt-3">
+            {localPreviewUrl ? (
+              <Image src={localPreviewUrl} alt="Preview" className="max-h-48 rounded-md object-contain" unoptimized width={80} height={80}/>
+            ) : form.current_image_url ? (
+              <Image src={form.current_image_url} alt="Current" className="max-h-48 rounded-md object-contain" unoptimized width={80} height={80}  />
+            ) : null}
+          </div>
         </div>
 
         {/* Availability */}
