@@ -1,22 +1,26 @@
 'use client';
 
-import { useEffect, useState, Fragment } from 'react';
-import { useRouter } from 'next/navigation';
+import CreateItemModal from '@/app/components/admin/items/CreateItemModal';
+import { useToast } from '@/app/components/ToastNotification';
 import { useItemStore } from '@/app/stores/useItemStore';
 import {
-  TrashIcon,
+  ArrowPathIcon,
   PencilSquareIcon,
   PlusIcon,
-  ArrowPathIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { Fragment, useEffect, useState } from 'react';
 
 export default function ItemsTable() {
   const router = useRouter();
+  const showToast = useToast();
   const { items: rawItems = [], fetchItems, deleteItem, loading, error } = useItemStore();
 
   const [showDelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [showCreateItemModal, setShowCreateItemModal] = useState(false);
 
   useEffect(() => {
     fetchItems();
@@ -45,9 +49,9 @@ export default function ItemsTable() {
     try {
       await deleteItem(deleteId);
       setShowDelete(false);
-      alert('Item deleted successfully.');
+      showToast('Item deleted successfully.', 'success');
     } catch (err) {
-      alert('Failed to delete item: ' + (err?.message || err));
+      showToast('Failed to delete item: ' + (err?.message || err), 'error');
     }
   };
 
@@ -79,17 +83,6 @@ export default function ItemsTable() {
   
     return "—";
   };
-
-  const handleToggle = (id) => {
-    // update the item in your state
-    setData(prev =>
-      prev.map(it =>
-        it.id === id
-          ? { ...it, is_available: !it.is_available }
-          : it
-      )
-    );
-  };
   
   
 
@@ -110,7 +103,7 @@ export default function ItemsTable() {
           </button>
 
           <button
-            onClick={() => router.push('/admin/items/create')}
+            onClick={() => setShowCreateItemModal(true)}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
           >
             <PlusIcon className="h-5 w-5" />
@@ -264,7 +257,6 @@ export default function ItemsTable() {
                         type="checkbox"
                         className="sr-only peer"
                         checked={item.is_available === 1 || item.is_available === true}
-                        onChange={() => handleToggle(item.id)}
                       />
                       <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
                       <div className="absolute w-5 h-5 bg-white rounded-full left-0.5 top-0.5 peer-checked:translate-x-5 transition-all"></div>
@@ -321,6 +313,11 @@ export default function ItemsTable() {
           </div>
         </div>
       )}
+      <CreateItemModal
+        isOpen={showCreateItemModal}
+        onClose={() => setShowCreateItemModal(false)}
+        onSuccess={fetchItems}
+      />
     </div>
   );
 }

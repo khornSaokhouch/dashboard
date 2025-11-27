@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useItemStore } from '@/app/stores/useItemStore';
+import { useToast } from '@/app/components/ToastNotification';
 import { useCategoryStore } from '@/app/stores/useCategoryStore';
+import { useItemStore } from '@/app/stores/useItemStore';
 import Image from 'next/image';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function EditItemPage() {
   const router = useRouter();
+  const showToast = useToast();
   const params = useParams();
   const itemId = params?.id;
 
@@ -74,7 +76,7 @@ export default function EditItemPage() {
           image_url: item.image_url ?? '',
         });
       } catch (error) {
-        alert('Failed to load item: ' + (error?.message ?? String(error)));
+        showToast('Failed to load item: ' + (error?.message ?? String(error)), 'error');
       } finally {
         if (mounted) setLoadingItem(false);
       }
@@ -165,10 +167,10 @@ export default function EditItemPage() {
 
       await updateItem(itemId, formData);
 
-      alert('Item updated successfully!');
+      showToast('Item updated successfully!', 'success');
       router.push('/admin/items');
     } catch (error) {
-      alert('Failed to update item: ' + (error?.message ?? String(error)));
+      showToast('Failed to update item: ' + (error?.message ?? String(error)), 'error');
     }
   };
 
