@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { useCategoryStore } from "@/app/stores/useCategoryStore";
 import { TrashIcon, PencilSquareIcon, PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
+import CreateCategoryModal from "./admin/categories/CreateCategoryModal";
 
 export default function CategoriesTable({ userRole = "owner" }) {
   const router = useRouter();
   const { categories = [], fetchCategories, deleteCategory, loading, error } = useCategoryStore();
   const [showDelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // filter state
   const [filterName, setFilterName] = useState("");
@@ -36,9 +39,9 @@ export default function CategoriesTable({ userRole = "owner" }) {
     try {
       await deleteCategory(deleteId);
       setShowDelete(false);
-      alert("Category deleted successfully.");
+      toast.success("Category deleted successfully.");
     } catch (err) {
-      alert("Failed to delete category: " + (err?.message || err));
+      toast.error("Failed to delete category: " + (err?.message || err));
     }
   };
 
@@ -77,6 +80,7 @@ export default function CategoriesTable({ userRole = "owner" }) {
 
   return (
     <div className="p-8">
+      {showCreateModal && <CreateCategoryModal closeModal={() => setShowCreateModal(false)} />}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Categories Management</h1>
         {userRole === "admin" && (
@@ -90,7 +94,7 @@ export default function CategoriesTable({ userRole = "owner" }) {
               Refresh
             </button>
             <button
-              onClick={() => router.push("/admin/categories/create")}
+              onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
             >
               <PlusIcon className="h-5 w-5" />

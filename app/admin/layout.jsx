@@ -9,6 +9,8 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useLanguageContext } from "../components/LanguageProviderClient";
 import FontWrapper from "../components/FontWrapper";
 
+import { Toaster } from "react-hot-toast";
+
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
@@ -57,6 +59,7 @@ export default function AdminLayout({ children }) {
 
   return (
     <FontWrapper>
+      <Toaster />
       <div className="text-gray-900 antialiased h-screen overflow-hidden flex">
         <aside className={`h-screen fixed left-0 top-0 bottom-0 z-50 transition-all duration-300 ${open ? "w-64" : "w-20"}`}>
           <SidebarAdmin open={open} setOpen={setOpen} />

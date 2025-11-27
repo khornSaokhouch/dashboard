@@ -32,7 +32,7 @@ export default function CreateUserModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-gray-200 bg-opacity-75"
         onClick={() => !isCreating && onClose()}
         aria-hidden="true"
       />

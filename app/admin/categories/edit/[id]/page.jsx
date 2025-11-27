@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useCategoryStore } from "@/app/stores/useCategoryStore";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
 
 export default function EditCategoryPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function EditCategoryPage() {
         setPreviewImage(category.image_url ?? category.image_category_url ?? null);
       } catch (err) {
         if (!mounted) return;
-        setError("Failed to load category.");
+        toast.error("Failed to load category.");
       }
     };
 
@@ -87,7 +88,7 @@ export default function EditCategoryPage() {
     setError(null);
 
     if (!formData.name?.trim()) {
-      setError("Please enter a category name.");
+      toast.error("Please enter a category name.");
       return;
     }
 
@@ -114,12 +115,12 @@ export default function EditCategoryPage() {
         } catch (err) {}
       }
 
-      alert("Category updated successfully!");
+      toast.success("Category updated successfully!");
       router.push("/admin/categories");
     } catch (err) {
       // normalize message
       const msg = err?.response?.data?.message || err?.message || "Failed to update category";
-      setError(msg);
+      toast.error(msg);
     }
   };
 
