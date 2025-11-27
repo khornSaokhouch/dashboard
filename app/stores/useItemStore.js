@@ -11,7 +11,7 @@ export const useItemStore = create((set, get) => ({
   // -------------------------------
   // Fetch all items
   // -------------------------------
-  fetchItems: async () => {
+  fetchItems: async (params = {}) => {
     const token = useAuthStore.getState().token;
     if (!token) {
       set({ error: 'No token found. Please log in.' });
@@ -20,7 +20,13 @@ export const useItemStore = create((set, get) => ({
 
     set({ loading: true, error: null });
     try {
-      const res = await request('/admin/items', 'GET', null, {
+      const queryParams = new URLSearchParams();
+      if (params.query) queryParams.append('query', params.query);
+      if (params.categoryId) queryParams.append('category_id', params.categoryId);
+      if (params.sortBy) queryParams.append('sort_by', params.sortBy);
+
+      const url = `/admin/items?${queryParams.toString()}`;
+      const res = await request(url, 'GET', null, {
         headers: { Authorization: `Bearer ${token}` },
       });
      
