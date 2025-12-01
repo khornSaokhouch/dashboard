@@ -26,6 +26,9 @@ export default function OptionGroupsUI() {
     fetchOptions();
   }, []);
 
+  console.log("Options:", options);
+  
+
   const handleCreate = async () => {
     if (!newOption.name) return alert("Name is required");
     if (!newOption.type) return alert("Please select a type");
