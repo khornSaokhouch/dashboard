@@ -26,7 +26,6 @@ export default function OptionGroupsUI() {
     fetchOptions();
   }, []);
 
-  console.log("Options:", options);
   
 
   const handleCreate = async () => {
@@ -92,7 +91,7 @@ export default function OptionGroupsUI() {
                       onChange={(e) => setEditOption({ ...editOption, type: e.target.value })}
                     >
                       <option value="">Select Type</option>
-                      <option value="single">Single</option>
+                      <option value="single">Select</option>
                       <option value="multiple">Multiple</option>
                     </select>
                   </td>
