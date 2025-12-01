@@ -10,6 +10,7 @@ import {
   CubeTransparentIcon,
   Cog6ToothIcon,
   ChevronLeftIcon,
+  AdjustmentsHorizontalIcon ,
 } from "@heroicons/react/24/outline";
 import { useLanguageContext } from "../LanguageProviderClient";
 
@@ -23,6 +24,8 @@ export default function Sidebar({ open, setOpen }) {
     { name: translations.shops || "Shops", href: "/admin/shops", icon: ShoppingBagIcon },
     { name: translations.categories || "Categories", href: "/admin/categories", icon: CubeTransparentIcon },
     { name: translations.items || "Items", href: "/admin/items", icon: Cog6ToothIcon },
+    { name: translations.optionsgroups || "Options-Groups", href: "/admin/options-groups", icon: AdjustmentsHorizontalIcon  },
+    { name: translations.settings || "Options", href: "/admin/options", icon: Cog6ToothIcon },
   ];
 
   return (
