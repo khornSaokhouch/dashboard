@@ -229,9 +229,6 @@ export default function ItemsTable() {
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">#</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Category</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Price</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Image</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Available</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Display Order</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Created At</th>
@@ -267,34 +264,15 @@ export default function ItemsTable() {
 
                     {Array.isArray(group.items) &&
                       group.items.map((item, idx) => (
-                        <tr key={idx + 1}
-                        onClick={() => goDetail(item.id)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') goDetail(item.id); }}
-                        tabIndex={0}
-                        role="button"
-                        className="cursor-pointer hover:bg-gray-50"
-                        >
+                        <tr key={idx + 1}>
                           <td className="px-4 py-2 text-sm text-gray-700">{idx + 1}</td>
 
                           <td className="px-4 py-2 text-sm text-gray-600">{group.category?.name ?? '-'}</td>
-                          <td className="px-4 py-2 text-sm text-gray-800">{item.name ?? '-'}</td>
-                          <td className="px-4 py-2 text-sm text-gray-600">{item.description ?? '—'}</td>
-
-                          <td className="px-4 py-2 text-sm text-gray-600">{formatPrice(item)}</td>
-
-                          <td className="px-4 py-2 text-sm text-gray-600">
-                            {item.image_url ? (
-                              <Image
-                                src={item.image_url}
-                                alt={item.name ?? 'Item'}
-                                width={80}
-                                height={80}
-                                className="h-10 w-10 object-cover rounded"
-                                unoptimized={true}
-                              />
-                            ) : (
-                              '—'
-                            )}
+                          <td
+                            className="px-4 py-2 text-sm text-gray-800 cursor-pointer hover:underline"
+                            onClick={() => goDetail(item.id)}
+                          >
+                            {item.name ?? '-'}
                           </td>
 
                           <td className="px-4 py-2 text-sm">
@@ -341,34 +319,16 @@ export default function ItemsTable() {
             {/* FLAT MODE */}
               {!isGrouped &&
                 itemArray.map((item, index) => (
-                  <tr
-                    key={item.id ?? `item-${index}`}
-                    onClick={() => router.push(`/admin/items/detail`)}                 // <-- navigate on row click
-                    onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/admin/items/detail`); }}
-                    tabIndex={0}
-                    role="button"
-                    className="cursor-pointer hover:bg-gray-50"
-                  >
+                  <tr key={item.id ?? `item-${index}`}>
                     <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
                     <td className="px-4 py-2 text-sm text-gray-600">{item.category?.name ?? '-'}</td>
-                    <td className="px-4 py-2 text-sm text-gray-800">{item.name ?? '-'}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{item.description ?? '—'}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{formatPrice(item)}</td>
-
-                    <td className="px-4 py-2 text-sm text-gray-600">
-                      {item.image_url ? (
-                        <Image
-                          src={item.image_url}
-                          alt={item.name ?? 'Item'}
-                          width={80}
-                          height={80}
-                          className="h-10 w-10 object-cover rounded"
-                          unoptimized={true}
-                        />
-                      ) : (
-                        '—'
-                      )}
+                    <td
+                      className="px-4 py-2 text-sm text-gray-800 cursor-pointer hover:underline"
+                      onClick={() => router.push(`/admin/items/detail/${item.id}`)}
+                    >
+                      {item.name ?? '-'}
                     </td>
+                    <td className="px-4 py-2 text-sm text-gray-600">{formatPrice(item)}</td>
 
                     <td className="px-4 py-2 text-sm text-gray-600">
                       <label className="inline-flex items-center cursor-pointer">

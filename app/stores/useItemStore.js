@@ -51,31 +51,53 @@ export const useItemStore = create((set, get) => ({
     // set loading state
     set({ loading: true });
   
-    try {
-      const res = await request(
-        `/admin/items/${id}`,
-        'GET',
-        null,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+                try {
   
-      // Some APIs return the entity at res.data.data, others at res.data.
-      // Use the inner object if present, otherwise fallback to res.data.
-      const item = res?.data?.data ?? res?.data ?? res;
+                  const res = await request(
   
-      // persist item in store and clear loading
-      set({ item, loading: false });
-
-      // return the item object so callers get the actual data
-      return item;
-    } catch (err) {
-      // clear loading on error as well
-      set({ loading: false });
+                    `/admin/items/${id}`,
   
-      const message = err?.response?.data?.message ?? err?.message ?? 'Failed to fetch item';
-      throw new Error(message);
-    }
-  },
+                    'GET',
+  
+                    null,
+  
+                    { headers: { Authorization: `Bearer ${token}` } }
+  
+                  );
+  
+              
+  
+                  // Some APIs return the entity at res.data.data, others at res.data.
+  
+                  // Use the inner object if present, otherwise fallback to res.data.
+  
+                  const item = res?.data?.data ?? res?.data ?? res;
+  
+              
+  
+                  // persist item in store and clear loading
+  
+                  set({ item, loading: false });
+  
+          
+  
+                  // return the item object so callers get the actual data
+  
+                  return item;
+  
+                } catch (err) {
+  
+                  // clear loading on error as well
+  
+                  set({ loading: false });
+  
+              
+  
+                  const message = err?.response?.data?.message ?? err?.message ?? 'Failed to fetch item';
+  
+                  throw new Error(message);
+  
+                }  },
   
 
   // -------------------------------

@@ -66,9 +66,6 @@ export default function ItemsTable() {
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Shop ID</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Category ID</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Price</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Image</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Available</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Display Order</th>
                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Created At</th>
@@ -82,14 +79,13 @@ export default function ItemsTable() {
                   <td className="px-4 py-2 text-sm text-gray-700">{item.id}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.shop_id}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.category_id}</td>
-                  <td className="px-4 py-2 text-sm text-gray-800">{item.name}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{item.description ?? '—'}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{item.price_cents ?? '—'}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">
-                    {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} className="h-10 w-10 object-cover rounded" />
-                    ) : '—'}
+                  <td
+                    className="px-4 py-2 text-sm text-gray-800 cursor-pointer hover:underline"
+                    onClick={() => router.push(`/owner/items/detail/${item.id}`)}
+                  >
+                    {item.name}
                   </td>
+                  <td className="px-4 py-2 text-sm text-gray-600">{item.price_cents ?? '—'}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.is_available ? 'Yes' : 'No'}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.display_order ?? '—'}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{item.created_at ?? '—'}</td>
