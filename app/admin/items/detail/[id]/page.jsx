@@ -25,6 +25,7 @@ const ItemDetail = () => {
     groupAssignmentsForItem,
     fetchOptions,
     assignOptionGroup,
+    deleteOptionGroup,
   } = useItemOptionStore();
   const token = useAuthStore((s) => s.token);
 
@@ -95,7 +96,8 @@ const ItemDetail = () => {
       setIsSheetOpen(false);
   
       // 🔄 REFRESH PAGE (get new data)
-     await fetchOptions();
+      await useItemOptionStore.getState().groupAssignmentsForItem(item.id);
+      await fetchOptions(); // refresh all options
   
     } catch (err) {
       console.error("Failed to attach group:", err);
@@ -106,6 +108,31 @@ const ItemDetail = () => {
       setAttachingId(null);
     }
   };
+  const handleRemoveGroup = async (groupId) => {
+    if (!item?.id) return;
+  
+    // Ask for confirmation
+    const groupName = safeOptionGroups.find((g) => g.id === groupId)?.name || "this group";
+    const confirmed = window.confirm(`Are you sure you want to remove "${groupName}" from this item?`);
+    if (!confirmed) return; // exit if user cancels
+  
+    const oldGroups = [...safeOptionGroups];
+    setOptionGroups(oldGroups.filter((g) => g.id !== groupId));
+  
+    try {
+      const result = await deleteOptionGroup(item.id, groupId);
+      await  groupAssignmentsForItem(id); // refresh list from backend
+      await fetchOptions(); // refresh all options
+      if (!result) {
+        setOptionGroups(oldGroups); // rollback if deletion failed
+      }
+    } catch (e) {
+      console.error("Failed to remove group:", e);
+      setOptionGroups(oldGroups); // rollback on error
+    }
+  };
+  
+  
   
 
   const priceDisplay = `$${(((item?.price_cents ?? 0) / 100) || 0).toFixed(2)}`;
@@ -182,65 +209,63 @@ const ItemDetail = () => {
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Option Groups (read-only)</h3>
 
           <div className="space-y-4">
-            {safeOptionGroups.length > 0 ? (
-              safeOptionGroups.map((group) => (
-                <div key={group.id} className="p-4 border rounded-md bg-gray-50">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-base font-semibold text-gray-800">{group.name}</div>
-                      <div className="text-xs text-gray-500">
-                        {group.type} • {group.is_required ? "Required" : "Optional"}
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-500">{group?.pivot ? "Attached" : ""}</div>
-                  </div>
+          {safeOptionGroups.map((group) => (
+  <div key={group.id} className="p-4 border rounded-md bg-gray-50">
+    <div className="flex items-center justify-between mb-3">
+      <div>
+        <div className="text-base font-semibold text-gray-800">{group.name}</div>
+        <div className="text-xs text-gray-500">
+          {group.type} • {group.is_required ? "Required" : "Optional"}
+        </div>
+      </div>
 
-                  <div className="flex flex-wrap gap-3">
-                    {(Array.isArray(group?.options) ? group.options : []).map((opt) => {
-                      const priceAdjRaw = opt?.price_adjust_cents ?? opt?.price_adjust ?? 0;
-                      let priceAdj = 0;
-                      if (priceAdjRaw === null || priceAdjRaw === undefined) priceAdj = 0;
-                      else {
-                        const rawStr = String(priceAdjRaw);
-                        if (rawStr.includes(".") && rawStr.split(".")[1]?.length === 2) {
-                          priceAdj = Number(rawStr);
-                        } else {
-                          const n = Number(rawStr);
-                          priceAdj = Number.isFinite(n) ? n / 100 : 0;
-                        }
-                      }
-                      const adjLabel = priceAdj ? `+${priceAdj.toFixed(2)}` : null;
+      {/* DELETE BUTTON */}
+      <button
+        onClick={() => handleRemoveGroup(group.id)}
+        className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+      >
+        <XMarkIcon className="h-4 w-4" />
+        Remove
+      </button>
+    </div>
 
-                      return (
-                        <div
-                          key={opt.id}
-                          className={`inline-flex items-center gap-3 px-3 py-2 rounded-md border bg-white text-sm ${
-                            Number(opt?.is_active) === 1 ? "" : "opacity-60"
-                          }`}
-                        >
-                          {opt?.icon_url ? (
-                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                              <Image src={opt.icon_url} alt={opt.name} width={32} height={32} unoptimized={true} />
-                            </div>
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                              {opt?.name?.charAt(0) || "•"}
-                            </div>
-                          )}
+    {/* options */}
+    <div className="flex flex-wrap gap-3">
+      {(Array.isArray(group?.options) ? group.options : []).map((opt) => {
+        const priceAdjRaw = opt?.price_adjust_cents ?? opt?.price_adjust ?? 0;
+        const priceAdj = Number(priceAdjRaw) ? Number(priceAdjRaw) / 100 : 0;
+        const adjLabel = priceAdj ? `+${priceAdj.toFixed(2)}` : null;
 
-                          <div className="leading-tight">
-                            <div className="font-medium text-gray-800">{opt?.name}</div>
-                            {adjLabel && <div className="text-xs text-gray-500">{adjLabel}</div>}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))
+        return (
+          <div
+            key={opt.id}
+            className={`inline-flex items-center gap-3 px-3 py-2 rounded-md border bg-white text-sm ${
+              Number(opt?.is_active) === 1 ? "" : "opacity-60"
+            }`}
+          >
+            {opt?.icon_url ? (
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                <Image src={opt.icon_url} alt={opt.name} width={32} height={32} unoptimized={true} />
+              </div>
             ) : (
-              <div className="text-sm text-gray-500">No option groups attached to this item.</div>
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                {opt?.name?.charAt(0) || "•"}
+              </div>
             )}
+
+            <div className="leading-tight">
+              <div className="font-medium text-gray-800">{opt?.name}</div>
+              {adjLabel && <div className="text-xs text-gray-500">{adjLabel}</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+))}
+          {safeOptionGroups.length === 0 && (
+            <div className="text-sm text-gray-500">No option groups attached to this item.</div>
+          )}
           </div>
         </div>
       </div>

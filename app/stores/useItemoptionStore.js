@@ -45,6 +45,41 @@ export const useItemOptionStore = create((set, get) => ({
     }
     },
 
+  // -------------------------------
+  // Fetch all groups
+  // -------------------------------
+  fetchGroups: async () => {
+    const token = useAuthStore.getState().token;
+    if (!token) {
+    set({ error: "No token found. Please log in." });
+    return [];
+    }
+    
+    set({ loading: true, error: null });
+    
+    try {
+    const res = await request("/admin/item-option-groups/display", "GET", null, {
+    headers: { Authorization: `Bearer ${token}` },
+    });
+
+    
+    // API returns an array directly
+    const optionsArray = Array.isArray(res) ? res : [];
+    
+
+    set({ options: optionsArray, loading: false });
+    return optionsArray;
+
+    
+    } catch (err) {
+    console.error("Fetch error:", err);
+    set({
+    error: err.response?.data?.message || err.message || "Failed to fetch options",
+    loading: false,
+    });
+    return [];
+    }
+    },
     
   //-------------------------------
   //Fetch option group assignments
@@ -270,4 +305,45 @@ export const useItemOptionStore = create((set, get) => ({
       return null;
     }
   },
+
+   // -------------------------------
+  // Delete option group assignment
+  // -------------------------------
+  deleteOptionGroup: async (itemId, groupId) => {
+    const token = useAuthStore.getState().token;
+    if (!token) return null;
+  
+    set({ loading: true, error: null });
+  
+    try {
+      const body = {
+        item_id: itemId,
+        item_option_group_id: groupId,
+      };
+  
+      const res = await request(
+        `/admin/item-option-group-assignments`,
+        "DELETE",
+        body,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+    
+      set({ loading: false });
+  
+      return res.data;
+    } catch (err) {
+      set({
+        error:
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to delete option group",
+        loading: false,
+      });
+      return null;
+    }
+  },
+  
 }));
