@@ -218,6 +218,37 @@ export const useItemOptionStore = create((set, get) => ({
     }
   },
 
+
+  // -------------------------------
+  // Create new option 
+  // -------------------------------
+
+  createOptions:async (data) => {
+    const token = useAuthStore.getState().token;
+    if (!token) return null;
+
+    set({ loading: true, error: null });
+    try {
+      const res = await request("/admin/item-options", "POST", data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Refresh list
+      await get().fetchOptions();
+      set({ loading: false });
+      return res.data;
+    } catch (err) {
+      set({
+        error:
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to create option",
+        loading: false,
+      });
+      return null;
+    }
+  },
+
   // -------------------------------
   // Update option group
   // -------------------------------

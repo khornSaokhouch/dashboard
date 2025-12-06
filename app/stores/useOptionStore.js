@@ -25,10 +25,8 @@ export const useOptionStore = create((set, get) => ({
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("Full response:", res);
-
       const optionsArray = Array.isArray(res) ? res : [];
-      console.log("Fetched options count:", optionsArray.length);
+  
 
       set({ options: optionsArray, loading: false });
       return optionsArray;
@@ -66,6 +64,7 @@ export const useOptionStore = create((set, get) => ({
       return null;
     }
   },
+  
 
   // -------------------------------
   // Create new option group
@@ -93,31 +92,69 @@ export const useOptionStore = create((set, get) => ({
     }
   },
 
+
   // -------------------------------
-  // Update option group
+  // Update option
   // -------------------------------
-  updateOption: async (id, data) => {
-    const token = useAuthStore.getState().token;
-    if (!token) return null;
 
-    set({ loading: true, error: null });
+updateOptionP: async (id, data) => {
+  const token = useAuthStore.getState().token;
+  if (!token) return null;
 
-    try {
-      const res = await request(`/admin/item-option-groups/${id}`, "PUT", data, {
-        headers: { Authorization: `Bearer ${token}` },
+  set({ loading: true, error: null });
+
+  try {
+    // If caller already passed a FormData, use it. Otherwise build one.
+    const formData = data instanceof FormData ? data : new FormData();
+
+    if (!(data instanceof FormData)) {
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
+        }
       });
-
-      await get().fetchOptions();
-      set({ loading: false });
-      return res.data;
-    } catch (err) {
-      set({
-        error: err.response?.data?.message || err.message || "Failed to update option",
-        loading: false,
-      });
-      return null;
     }
-  },
+
+    // Add PUT override
+    formData.append("_method", "PUT");
+
+    // Debug: list entries (helpful while developing)
+    // for (const pair of formData.entries()) console.log('fd', pair);
+
+    const res = await request(
+      `/admin/item-options/${id}`,
+      "POST",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Do NOT set Content-Type for FormData; browser will set boundary.
+          Accept: "application/json",
+        },
+      }
+    );
+
+    await get().fetchOptions();
+    set({ loading: false });
+
+    console.log("Update response data:", res?.data);
+
+    return res?.data ?? null;
+
+  } catch (err) {
+    set({
+      error:
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update option",
+      loading: false,
+    });
+    return null;
+  }
+},
+
+
+  
 
   // -------------------------------
   // Delete option group
