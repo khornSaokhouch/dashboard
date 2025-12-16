@@ -110,7 +110,7 @@ createShop: async (shopData = {}) => {
     const newShop = res?.data ?? res;
 
     // append to store
-    set((state) => ({ shops: [...(state.shops || []), newShop], error: null }));
+    // set((state) => ({ shops: [...(state.shops || []), newShop], error: null }));
 
     return newShop;
   } catch (err) {

@@ -1,12 +1,12 @@
 // app/admin/items/page.jsx
 'use client';
 
-import ItemsDashboard from '@/app/components/admin/items/ItemsDashboard';
+import AdminItemsOverview from '@/app/components/admin/items/AdminItemsOverview';
 
 export default function ItemsPage() {
   return (
     <div className="p-8">
-      <ItemsDashboard />
+      <AdminItemsOverview />
     </div>
   );
 }
