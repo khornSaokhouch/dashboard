@@ -166,10 +166,12 @@ updateOptionP: async (id, data) => {
     set({ loading: true, error: null });
 
     try {
-      const res = await request(`/admin/item-option-groups/${id}`, "DELETE", null, {
+      const res = await request(`/admin/item-options/${id}`, "DELETE", null, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+    
+  
       await get().fetchOptions();
       set({ loading: false });
       return res.data;

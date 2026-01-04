@@ -29,7 +29,7 @@ const EmptyState = ({ onAdd }) => (
     </div>
     <h3 className="text-lg font-semibold text-gray-900">No Options Found</h3>
     <p className="text-sm text-gray-500 mt-1 max-w-sm text-center mb-6">
-      Add specific choices like "Less Sugar", "Large", or "Extra Cheese" to your
+      Add specific choices like Less Sugar", "Large", or "Extra Cheese" to your
       groups.
     </p>
     <button
@@ -482,7 +482,8 @@ export default function ItemOptionsPage() {
     if(!itemToDelete) return;
     setIsDeleting(true);
     try {
-      await storeDeleteOption(itemToDelete.id);
+        await storeDeleteOption(itemToDelete.id);
+       
       await fetchOptions();
       setDeleteModalOpen(false);
       setItemToDelete(null);
@@ -509,7 +510,7 @@ export default function ItemOptionsPage() {
   };
 
   // Helpers
-  const fmtPrice = (cents) => `$${(Number(cents) / 100).toFixed(2)}`;
+  const fmtPrice = (cents) => `$${(Number(cents)).toFixed(2)}`;
 
   // Filter
   const filteredOptions = options.filter(
