@@ -140,8 +140,8 @@ function OptionGroupModal({ isOpen, onClose, onSubmit, initialData, isEditing })
 
                   <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
                     <div>
-                        <span className="block text-sm font-semibold text-gray-900">Mandatory Selection</span>
-                        <span className="text-xs text-gray-500">Customer must choose an option</span>
+                        <span className="block text-sm font-semibold text-gray-900">Status</span>
+                        <span className="text-xs text-gray-500">If active, customer must make a selection.</span>
                     </div>
                     <Switch
                         checked={formData.is_required}
@@ -385,7 +385,7 @@ export default function ItemOptionGroups() {
                     <tr>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider pl-8">Group Name</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Required</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider pr-8">Actions</th>
                     </tr>
                 </thead>
@@ -415,16 +415,17 @@ export default function ItemOptionGroups() {
                                 </span>
                             </td>
 
-                            {/* Required */}
+                            {/* Status */}
                             <td className="px-6 py-4">
                                 {option.is_required ? (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                                        Mandatory
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                                        Active
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
-                                        Optional
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                        Inactive
                                     </span>
                                 )}
                             </td>

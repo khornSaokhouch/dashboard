@@ -210,11 +210,12 @@ function OptionModal({ isOpen, onClose, onSubmit, groups, initialData }) {
                         <input
                           type="number"
                           min="0"
-                          value={formData.price_adjust_cents}
+                          step="0.01" // Allow decimal input
+                          value={formData.price_adjust_cents === 0 ? '' : formData.price_adjust_cents / 100} // Display in dollars, empty if 0
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              price_adjust_cents: e.target.value,
+                              price_adjust_cents: Math.round(parseFloat(e.target.value) * 100) || 0, // Convert to cents
                             })
                           }
                           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none sm:text-sm"
@@ -510,7 +511,7 @@ export default function ItemOptionsPage() {
   };
 
   // Helpers
-  const fmtPrice = (cents) => `$${(Number(cents)).toFixed(2)}`;
+  const fmtPrice = (cents) => `$${(Number(cents) / 100).toFixed(2)}`;
 
   // Filter
   const filteredOptions = options.filter(
